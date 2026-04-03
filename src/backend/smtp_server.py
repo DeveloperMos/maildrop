@@ -1,9 +1,13 @@
 
 import asyncore
 import sys
+import logging
 from aiosmtpd.controller import Controller
 from . import email_parser, inbox_handler
 import config
+
+# Disable aiosmtpd's logging
+logging.getLogger('mail.log').setLevel(logging.ERROR)
 
 # Class for SMTP server logic
 class SMTPServer:
@@ -23,10 +27,11 @@ class SMTPServer:
 
 # This function sets up and runs the SMTP server
 def run_smtp_server(host: str = "0.0.0.0", port: int = 25):
+    logging.info(f"Starting SMTP server on {host}:{port}")
+    
     handler = SMTPServer()
     controller = Controller(handler, hostname=host, port=port)
     
-    print(f"Starting SMTP server on {host}:{port}")
     try:
         controller.start()
     except Exception as e:
