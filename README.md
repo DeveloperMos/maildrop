@@ -156,7 +156,7 @@ In this configuration, you would be able to access maildrop from http://domain.c
 
 ## Configuration
 
-Edit .env to change these or set environment variables if you are using docker. These are currently all of the options
+Create a .env file and edit the values to change these, you can create a copy of .example.env for a template if you want. If you are using docker, simply set these as environment variables.
 
 | Variable              | Description                                           |
 | --------------------- | ----------------------------------------------------- |
