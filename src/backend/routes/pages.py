@@ -15,4 +15,4 @@ def log_after_request(response):
 # The main route that serves the website
 @bp.route('/')
 def index():
-    return render_template('index.html', enable_sending=config.ENABLE_SENDING)
+    return render_template('index.html', enable_sending=config.settings.ENABLE_SENDING)

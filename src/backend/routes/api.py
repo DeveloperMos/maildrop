@@ -21,12 +21,12 @@ def log_after_request(response):
 @bp.route('/get_random_address')
 def get_random_address():
     random_string = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
-    return jsonify({"address": f"{random_string}@{config.DOMAIN}"}), 200
+    return jsonify({"address": f"{random_string}@{config.settings.DOMAIN}"}), 200
 
 # Get an email domain
 @bp.route('/get_domain')
 def get_domain():
-    return jsonify({"domain": config.DOMAIN}), 200
+    return jsonify({"domain": config.settings.DOMAIN}), 200
 
 # This route returns the contents of an inbox
 @bp.route('/get_inbox')
@@ -34,7 +34,7 @@ def get_inbox():
     addr = request.args.get("address", "").lower()
     password = request.headers.get("Authorization", None)
 
-    if re.match(config.PROTECTED_ADDRESSES, addr) and password != config.PASSWORD:
+    if re.match(config.settings.PROTECTED_ADDRESSES, addr) and password != config.settings.PASSWORD:
         return jsonify({"error": "Unauthorized"}), 401
 
     inbox = inbox_handler.read_inbox()
@@ -44,7 +44,7 @@ def get_inbox():
 # This route sends an email
 @bp.route('/send_email', methods=['POST'])
 def send_email_route():
-    if not config.ENABLE_SENDING:
+    if not config.settings.ENABLE_SENDING:
         return jsonify({"error": "Sending is disabled"}), 403
     
     data = request.json
@@ -57,8 +57,8 @@ def send_email_route():
     if not all([from_address, to_address, subject, body]):
         return jsonify({"error": "Missing fields"}), 400
 
-    if not from_address.endswith(config.DOMAIN):
-         return jsonify({"error": f"You can only send from @{config.DOMAIN} addresses"}), 403
+    if not from_address.endswith(config.settings.DOMAIN):
+         return jsonify({"error": f"You can only send from @{config.settings.DOMAIN} addresses"}), 403
     
     success, message = sender.send_email(from_address, to_address, subject, body)
 

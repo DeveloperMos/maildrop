@@ -9,7 +9,7 @@ logger = logging.getLogger("maildrop")
 
 # send an email
 def send_email(from_address, to_address, subject, body):
-    if config.ENABLE_SENDING == False:
+    if config.settings.ENABLE_SENDING == False:
         return False, "Sending is disabled"
 
     message = MIMEMultipart()
@@ -21,15 +21,15 @@ def send_email(from_address, to_address, subject, body):
     server = None
 
     try:
-        if config.RELAY_PORT == 465:
+        if config.settings.RELAY_PORT == 465:
             context = ssl.create_default_context()
-            server = smtplib.SMTP_SSL(config.RELAY_HOST, config.RELAY_PORT, context=context)
+            server = smtplib.SMTP_SSL(config.settings.RELAY_HOST, config.settings.RELAY_PORT, context=context)
         else:
-            server = smtplib.SMTP(config.RELAY_HOST, config.RELAY_PORT)
+            server = smtplib.SMTP(config.settings.RELAY_HOST, config.settings.RELAY_PORT)
             server.starttls()
 
-        if config.RELAY_USER and config.RELAY_PASS:
-            server.login(config.RELAY_USER, config.RELAY_PASS)
+        if config.settings.RELAY_USER and config.settings.RELAY_PASS:
+            server.login(config.settings.RELAY_USER, config.settings.RELAY_PASS)
         
         server.send_message(message)
         server.quit()
