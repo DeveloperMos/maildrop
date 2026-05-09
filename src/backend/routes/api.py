@@ -6,10 +6,22 @@ import re
 import random
 import string
 import logging
+import threading
 
 logger = logging.getLogger("maildrop")
 
 bp = Blueprint('api', __name__)
+
+_domain_rr_lock = threading.Lock()
+_domain_rr_index = 0
+
+def _next_domain() -> str:
+    global _domain_rr_index
+    domains = config.get_domains()
+    with _domain_rr_lock:
+        d = domains[_domain_rr_index % len(domains)]
+        _domain_rr_index = (_domain_rr_index + 1) % len(domains)
+    return d
 
 # Log API requests
 @bp.after_request
@@ -21,12 +33,12 @@ def log_after_request(response):
 @bp.route('/get_random_address')
 def get_random_address():
     random_string = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
-    return jsonify({"address": f"{random_string}@{config.settings.DOMAIN}"}), 200
+    return jsonify({"address": f"{random_string}@{_next_domain()}"}), 200
 
-# Get an email domain
+# Get an email domain (round-robin over configured list)
 @bp.route('/get_domain')
 def get_domain():
-    return jsonify({"domain": config.settings.DOMAIN}), 200
+    return jsonify({"domain": _next_domain()}), 200
 
 # This route returns the contents of an inbox
 @bp.route('/get_inbox')
@@ -57,8 +69,9 @@ def send_email_route():
     if not all([from_address, to_address, subject, body]):
         return jsonify({"error": "Missing fields"}), 400
 
-    if not from_address.endswith(config.settings.DOMAIN):
-         return jsonify({"error": f"You can only send from @{config.settings.DOMAIN} addresses"}), 403
+    domains = config.get_domains()
+    if not any(from_address.lower().endswith("@" + d) for d in domains):
+         return jsonify({"error": f"You can only send from one of: {', '.join(domains)}"}), 403
     
     success, message = sender.send_email(from_address, to_address, subject, body)
 

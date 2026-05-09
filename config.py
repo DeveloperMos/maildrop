@@ -37,5 +37,9 @@ except ValidationError as e:
         error_message = error['msg']
     
         logger.critical(f"{field_name}: {error_message}")
-        
+
     sys.exit(1)
+
+
+def get_domains() -> list[str]:
+    return [d.strip().lower().lstrip("@") for d in settings.DOMAIN.split(",") if d.strip()]

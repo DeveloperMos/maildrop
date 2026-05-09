@@ -17,7 +17,8 @@ class SMTPServer:
     async def handle_DATA(self, server, session, envelope):
         try:
             parsed_email = email_parser.email_bytes_to_json(envelope.content)
-            if not parsed_email['To'].endswith(config.settings.DOMAIN):
+            to_addr = (parsed_email.get('To') or '').lower()
+            if not any(to_addr.endswith("@" + d) for d in config.get_domains()):
                 return '500 Could not process email'
 
             inbox_handler.recv_email(parsed_email)
