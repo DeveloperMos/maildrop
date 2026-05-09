@@ -18,6 +18,7 @@
 - [Connecting to your domain](#connecting-to-your-domain)
   - [Example DNS configurations](#example-dns-configurations)
 - [Configuration](#configuration)
+  - [Multiple domains](#multiple-domains)
 - [Sending](#sending)
 - [API Reference](#api-reference)
 - [License](#license)
@@ -125,7 +126,7 @@ Create this on the domain you want the maildrop running on. The ip address shoul
 3. **Create an `MX` record in your dns settings**  
 Create this on the domain you want emails to be sent to. It should be pointed to the domain you created your `A` record on.
 4. **Edit `.env` and change the domain to your domain**  
-Edit the .env file and set `DOMAIN` to the domain you are receiving emails on (so the domain you created the MX record on). This is used for email address generation. If you are using docker, edit the DOMAIN environment variable directly.
+Edit the .env file and set `DOMAIN` to the domain you are receiving emails on (so the domain you created the MX record on). This is used for email address generation. If you are using docker, edit the DOMAIN environment variable directly. To serve more than one domain from the same instance, pass them comma-separated — see [Multiple domains](#multiple-domains).
 
 ---
 
@@ -168,7 +169,35 @@ Create a .env file and edit the values to change these, you can create a copy of
 | `MAX_INBOX_SIZE`      | The maximum size of the inbox.                        |
 | `PROTECTED_ADDRESSES` | A regex for inboxes that require a password.          |
 | `PASSWORD`            | The password for protected inboxes.                   |
-| `DOMAIN`              | The domain to be used for generating email addresses. |
+| `DOMAIN`              | The domain (or comma-separated list of domains) used for generating and accepting email addresses. See [Multiple domains](#multiple-domains). |
+
+### Multiple domains
+
+`DOMAIN` accepts a comma-separated list, so a single instance can serve any number of domains at once. Set up `MX` records for each domain pointing at the same maildrop host (see [Connecting to your domain](#connecting-to-your-domain)) and pass them all in `DOMAIN`:
+
+```
+-e DOMAIN="example.com,example.org,example.net"
+```
+
+Behavior:
+- **SMTP** — incoming mail is accepted if the recipient address ends with `@<any of the listed domains>`.
+- **`/get_domain` and `/get_random_address`** — domains are served in **round-robin** order, so consecutive requests rotate through the list (1st → `example.com`, 2nd → `example.org`, 3rd → `example.net`, 4th → back to `example.com`, …). The counter is shared between both endpoints and is thread-safe.
+- **`/send_email`** — the `From` address must match `@<any of the listed domains>`.
+
+Full example (one container, three domains):
+
+```
+sudo docker run \
+  -d \
+  --restart unless-stopped \
+  --name maildrop \
+  -p 5000:5000 \
+  -p 25:25 \
+  -e DOMAIN="example.com,example.org,example.net" \
+  haileyydev/maildrop:latest
+```
+
+A single domain still works as before — `DOMAIN="example.com"` is just a list of one.
 
 ## Sending
 Maildrop also supports sending mail as an optional feature. Visit the [Sending Guide](docs/SENDING.md) for instructions.
