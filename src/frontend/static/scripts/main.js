@@ -12,12 +12,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const inboxList = document.getElementById('inbox-list');
     const placeholder = document.getElementById('inbox-placeholder');
     const sendBtn = document.getElementById('send-btn');
+    const clearBtn = document.getElementById('clear-btn');
 
     // add event listeners
     copyBtn.addEventListener('click', copyToClipboard);
     randomBtn.addEventListener('click', generateRandomEmail);
     refreshBtn.addEventListener('click', fetchInbox);
     customBtn.addEventListener('click', handleCustomEmail);
+    clearBtn.addEventListener('click', clearAllEmails);
     if (sendBtn) {
         sendBtn.addEventListener('click', sendButtonClicked); 
     }
@@ -156,6 +158,23 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             updateEmail(customEmail);
         }
+    }
+
+    // delete all emails for all addresses on the server
+    async function clearAllEmails() {
+        if (!confirm("Delete ALL emails for ALL addresses?")) return;
+
+        const password = prompt("Enter admin password:");
+        if (!password) return;
+
+        const result = await clearInbox(password);
+        if (result.error) {
+            alert("Error: " + result.error);
+            return;
+        }
+
+        alert(`Deleted ${result.removed} emails.`);
+        fetchInbox();
     }
 
     // shows a form to the user

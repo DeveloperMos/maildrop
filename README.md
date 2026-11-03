@@ -166,7 +166,7 @@ Create a .env file and edit the values to change these, you can create a copy of
 | `SMTP_HOST`           | The host for the SMTP server.                         |
 | `SMTP_PORT`           | The port for the SMTP server.                         |
 | `INBOX_FILE_NAME`     | The file where emails are stored.                     |
-| `MAX_INBOX_SIZE`      | The maximum size of the inbox.                        |
+| `MAX_INBOX_SIZE`      | The maximum size of the inbox; the whole inbox is wiped when it is reached (default 1GB). |
 | `MAX_EMAIL_AGE_DAYS`  | Emails older than this many days are deleted (default 2). |
 | `CLEANUP_INTERVAL`    | How often, in seconds, old emails are deleted (default 3600). |
 | `PROTECTED_ADDRESSES` | A regex for inboxes that require a password.          |

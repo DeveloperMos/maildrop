@@ -40,6 +40,10 @@
                     <img src="{{ url_for('static', filename='resources/edit-icon.svg') }}" alt="Edit Icon">
                     <span class="button-text">Use Custom</span>
                 </button>
+                <button id="clear-btn" class="btn btn-secondary">
+                    <img src="{{ url_for('static', filename='resources/trash-icon.svg') }}" alt="Trash Icon">
+                    <span class="button-text">Clear All</span>
+                </button>
                 {% if enable_sending %}
                 <button id="send-btn" class="btn btn-secondary">
                     <img src="{{ url_for('static', filename='resources/send-icon.svg') }}" alt="Send Icon">

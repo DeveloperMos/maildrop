@@ -90,6 +90,8 @@ Fix (in `src/backend/inbox_handler.py`):
 - `run_cleanup_loop()` runs it on startup and every `CLEANUP_INTERVAL` seconds (default 3600) in a daemon thread started from `app.py`. `recv_email()` also prunes on every write.
 - `_inbox_lock` serializes writers (SMTP handler + cleanup thread). `write_inbox()` writes to `inbox.json.tmp` and then calls `os.replace`, so Flask readers never see a half-written file. Before this, `read_inbox()`'s bare `except` turned a partial read into `{}`.
 - The container is run **without** `--memory`, because the host has 16GB.
+- The `MAX_INBOX_SIZE` default was raised to 1GB, so the full wipe is only an emergency fallback and age-based pruning does the real work.
+- `POST /clear_inbox` (the "Clear All" button in the UI) wipes every address. It checks the `Authorization` header against `PASSWORD` with `hmac.compare_digest`. **Set `PASSWORD` in production**, because the default is `"password"`.
 
 The container has no volume, so `inbox.json` lives in the container layer: it survives `docker restart`, but `docker rm` deletes it. To redeploy without losing mail: `docker stop`, then `docker cp <c>:/app/inbox.json`, then create the new container and `docker cp` the file into it before `docker start`.
 

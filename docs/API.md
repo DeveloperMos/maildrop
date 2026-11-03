@@ -50,3 +50,16 @@ GET /get_domain
   "domain": "yourdomain.com"
 }
 ```
+### Clear Inbox
+Deletes all emails for all addresses. Requires the admin password (`PASSWORD`) in the `Authorization` header.
+```http
+POST /clear_inbox
+Authorization: yourpassword
+```
+**Response**
+```json
+{
+  "removed": 617
+}
+```
+Returns `401` with `{"error": "Unauthorized"}` if the password is missing or wrong.

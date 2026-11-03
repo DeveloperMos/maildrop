@@ -3,6 +3,7 @@ from .. import inbox_handler
 from .. import sender
 import config
 import re
+import hmac
 import random
 import string
 import logging
@@ -52,6 +53,17 @@ def get_inbox():
     inbox = inbox_handler.read_inbox()
     address_inbox = inbox.get(addr, [])
     return jsonify(address_inbox), 200
+
+# This route deletes all emails, requires the admin password
+@bp.route('/clear_inbox', methods=['POST'])
+def clear_inbox_route():
+    password = request.headers.get("Authorization", "")
+
+    if not hmac.compare_digest(password.encode(), config.settings.PASSWORD.encode()):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    removed = inbox_handler.clear_inbox()
+    return jsonify({"removed": removed}), 200
 
 # This route sends an email
 @bp.route('/send_email', methods=['POST'])

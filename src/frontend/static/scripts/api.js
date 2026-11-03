@@ -29,6 +29,18 @@ async function getDomain() {
     return await response.json();
 }
 
+// delete all emails on the server, needs the admin password
+async function clearInbox(password) {
+    const response = await fetch('/clear_inbox', {
+        method: 'POST',
+        headers: {
+            'Authorization': password
+        }
+    });
+
+    return await response.json();
+}
+
 // send an email
 async function sendEmail(fromAddress, toAddress, subject, body) {
     const response = await fetch('/send_email', {

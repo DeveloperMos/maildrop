@@ -63,6 +63,15 @@ def cleanup_inbox():
             write_inbox(inbox)
             logger.info(f"Removed {removed} emails older than {config.settings.MAX_EMAIL_AGE_DAYS} days.")
 
+# Deletes every email for every address, returns how many were removed
+def clear_inbox() -> int:
+    with _inbox_lock:
+        removed = sum(len(emails) for emails in read_inbox().values())
+        write_inbox({})
+
+    logger.warning(f"Inbox cleared on request, removed {removed} emails.")
+    return removed
+
 # Runs cleanup_inbox forever, every CLEANUP_INTERVAL seconds
 def run_cleanup_loop(interval: int):
     logger.info(f"Starting inbox cleanup, removing emails older than {config.settings.MAX_EMAIL_AGE_DAYS} days every {interval}s")
