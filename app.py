@@ -17,13 +17,17 @@ if __name__ == "__main__":
     import config
     from src.backend.flask_app import run_flask_server
     from src.backend.smtp_server import run_smtp_server
+    from src.backend.inbox_handler import run_cleanup_loop
 
     # Start the web server and SMTP server in separate threads
     flask_thread = threading.Thread(target=run_flask_server, args=(config.settings.FLASK_HOST, config.settings.FLASK_PORT))
     smtp_thread = threading.Thread(target=run_smtp_server, args=(config.settings.SMTP_HOST, config.settings.SMTP_PORT))
+    # Removes old emails in the background, daemon so it doesn't block shutdown
+    cleanup_thread = threading.Thread(target=run_cleanup_loop, args=(config.settings.CLEANUP_INTERVAL,), daemon=True)
 
     flask_thread.start()
     smtp_thread.start()
+    cleanup_thread.start()
 
     # Run forever until interrupted
     try:

@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     SMTP_PORT: int = Field(default=25, ge=1, le=65535)
     INBOX_FILE_NAME: str = "inbox.json"
     MAX_INBOX_SIZE: int = Field(default=100000000, ge=1)
+    MAX_EMAIL_AGE_DAYS: float = Field(default=2, gt=0)
+    CLEANUP_INTERVAL: int = Field(default=3600, ge=1)
     PROTECTED_ADDRESSES: str = "^admin.*"
     PASSWORD: str = "password"
     DOMAIN: str = "yourdomain.com"

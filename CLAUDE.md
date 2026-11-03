@@ -70,7 +70,7 @@ Single command, multiple domains:
 ```bash
 docker run -d --restart unless-stopped --name maildrop \
   --ulimit nproc=512:512 --ulimit nofile=2048:2048 \
-  --memory="512m" --cpus="1" \
+  --cpus="1" \
   -p 127.0.0.1:5000:5000 -p 25:25 \
   -e DOMAIN="example.com,example.org,example.net" \
   -e THREADS=1 \
@@ -80,6 +80,18 @@ docker run -d --restart unless-stopped --name maildrop \
 Build is `docker build -t maildrop-multi .` from the repo root — uses upstream Dockerfile (Python 3.9-slim, `python ./app.py`).
 
 DNS: each domain in `DOMAIN` needs its own `MX` pointing at the maildrop host. The host still binds a single port 25 — there's no per-domain port routing.
+
+## Email retention
+
+`inbox.json` is one JSON file that every request and every incoming email reads in full. With `--memory=512m` and a ~40–100MB inbox the container got pinned at its memory limit and stopped answering, while still showing `running` and not OOM-killed. `MAX_INBOX_SIZE` (100MB) never fired early enough to save it.
+
+Fix (in `src/backend/inbox_handler.py`):
+- `prune_old_emails()` drops emails whose `Timestamp` is older than `MAX_EMAIL_AGE_DAYS` (default 2), and drops empty addresses. Emails with no `Timestamp` count as old.
+- `run_cleanup_loop()` runs it on startup and every `CLEANUP_INTERVAL` seconds (default 3600) in a daemon thread started from `app.py`. `recv_email()` also prunes on every write.
+- `_inbox_lock` serializes writers (SMTP handler + cleanup thread). `write_inbox()` writes to `inbox.json.tmp` and then calls `os.replace`, so Flask readers never see a half-written file. Before this, `read_inbox()`'s bare `except` turned a partial read into `{}`.
+- The container is run **without** `--memory`, because the host has 16GB.
+
+The container has no volume, so `inbox.json` lives in the container layer: it survives `docker restart`, but `docker rm` deletes it. To redeploy without losing mail: `docker stop`, then `docker cp <c>:/app/inbox.json`, then create the new container and `docker cp` the file into it before `docker start`.
 
 ## Things to know before changing
 
