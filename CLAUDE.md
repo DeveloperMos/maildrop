@@ -95,6 +95,12 @@ Fix (in `src/backend/inbox_handler.py`):
 
 The container has no volume, so `inbox.json` lives in the container layer: it survives `docker restart`, but `docker rm` deletes it. To redeploy without losing mail: `docker stop`, then `docker cp <c>:/app/inbox.json`, then create the new container and `docker cp` the file into it before `docker start`.
 
+## Static asset caching
+
+The public UI at `https://iy8ei7.canamaster.net` goes through Cloudflare, then nginx on 192.168.1.22 (`/etc/nginx/conf.d/smtp.conf`), then `127.0.0.1:5000`. Cloudflare rewrites static responses to `cache-control: max-age=3600`, so after a deploy browsers kept the old `main.js` for up to an hour, without even sending a request. That is why the Clear All button "did nothing" the first time.
+
+`flask_app.py` exposes `static_url(filename)` to templates, which appends `?v=<file mtime>`. **Always use `static_url(...)` in templates, never `url_for('static', ...)`.**
+
 ## Things to know before changing
 
 - **Don't reintroduce `config.settings.DOMAIN.endswith` checks anywhere** — always go through `config.get_domains()` so multi-domain stays consistent.
